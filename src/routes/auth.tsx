@@ -46,17 +46,22 @@ function AuthPage() {
         toast.success("Welcome back");
         navigate({ to: "/", replace: true });
       } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
             data: { full_name: fullName },
           },
         });
         if (error) throw error;
-        toast.success("Account created — you're signed in");
-        navigate({ to: "/", replace: true });
+        // If email confirmation is required, no session is returned yet.
+        if (data.session) {
+          toast.success("Account created — you're signed in");
+          navigate({ to: "/", replace: true });
+        } else {
+          navigate({ to: "/verify-email", search: { email }, replace: true });
+        }
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
