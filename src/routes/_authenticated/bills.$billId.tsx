@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Flag, Pill, Mail, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Flag, Pill, Mail, Loader2, Sparkles, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -18,7 +18,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { sendBillingReviewEmail } from "@/lib/email.functions";
+import { sendBillingReviewEmail, type EmailDraft } from "@/lib/email.functions";
+import { findAlternatives, type AlternativeMatch } from "@/lib/medications.functions";
 
 type BillingItem = {
   description: string;
@@ -28,15 +29,42 @@ type BillingItem = {
   cheaper_alternative?: { name: string; estimated_cost: number } | null;
 };
 
+type ExtractedMedication = {
+  medicationName: string;
+  dosage?: string | null;
+  frequency?: string | null;
+};
+
 export const Route = createFileRoute("/_authenticated/bills/$billId")({
   head: () => ({ meta: [{ title: "Bill detail — MediCura" }] }),
   component: BillDetail,
 });
 
+const MED_KEYWORDS = [
+  "mg", "mcg", "tablet", "capsule", "rx", "injection", "vial", "inhaler", "syrup", "oral", "iv ",
+];
+
+function extractMedicationNames(items: BillingItem[], extracted: ExtractedMedication[]): string[] {
+  const names = new Set<string>();
+  for (const m of extracted) {
+    if (m.medicationName) names.add(m.medicationName);
+  }
+  for (const item of items) {
+    const desc = item.description.toLowerCase();
+    if (MED_KEYWORDS.some((k) => desc.includes(k))) {
+      // strip dosing markers to leave a cleaner med name
+      const cleaned = item.description.replace(/\d+\s*(mg|mcg|ml|g)\b.*$/i, "").trim();
+      if (cleaned.length > 1) names.add(cleaned);
+    }
+  }
+  return Array.from(names).slice(0, 8);
+}
+
 function BillDetail() {
   const { billId } = Route.useParams();
   const navigate = useNavigate();
   const { data: user } = useCurrentUser();
+  const findAlternativesFn = useServerFn(findAlternatives);
 
   const bill = useQuery({
     queryKey: ["bill", billId],
@@ -54,13 +82,20 @@ function BillDetail() {
     },
   });
 
-  const meds = useQuery({
-    queryKey: ["medications"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("medications").select("*");
-      if (error) throw error;
-      return data;
-    },
+  const items = useMemo(
+    () => (bill.data?.billing_items as unknown as BillingItem[]) || [],
+    [bill.data],
+  );
+  const extractedMeds = useMemo(
+    () => ((bill.data?.billing_items as unknown as ExtractedMedication[] | undefined) ? [] : []),
+    [bill.data],
+  );
+  const medNames = useMemo(() => extractMedicationNames(items, extractedMeds), [items, extractedMeds]);
+
+  const alternatives = useQuery({
+    queryKey: ["alternatives", billId, medNames.join(",")],
+    enabled: medNames.length > 0,
+    queryFn: () => findAlternativesFn({ data: { medicationNames: medNames } }),
   });
 
   if (bill.isLoading) {
@@ -70,8 +105,6 @@ function BillDetail() {
       </AppShell>
     );
   }
-
-  const items = (bill.data?.billing_items as unknown as BillingItem[]) || [];
 
   return (
     <AppShell
@@ -163,20 +196,51 @@ function BillDetail() {
               <CardDescription>Cheaper alternatives we spotted.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {findMedicationMatches(items, meds.data || []).map((m, i) => (
+              {medNames.length === 0 && (
+                <p className="text-sm text-muted-foreground">No medication line items detected on this bill.</p>
+              )}
+              {alternatives.isLoading && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Looking up alternatives…
+                </div>
+              )}
+              {alternatives.data?.map((m: AlternativeMatch, i: number) => (
                 <div key={i} className="rounded-lg border bg-card p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="font-medium">{m.name}</div>
-                    <Badge variant="outline">${m.average_cost?.toFixed(0)}</Badge>
+                    {m.average_cost != null && (
+                      <Badge variant="outline">${m.average_cost.toFixed(0)}</Badge>
+                    )}
                   </div>
-                  <div className="mt-2 flex items-center justify-between gap-2 text-sm">
-                    <span className="text-muted-foreground">→ {m.cheaper_alternative}</span>
-                    <Badge className="bg-success text-success-foreground">${m.alternative_cost?.toFixed(0)}</Badge>
+                  {(m.cheaper_alternative || m.generic_equivalent) && (
+                    <div className="mt-2 flex items-center justify-between gap-2 text-sm">
+                      <span className="text-muted-foreground">
+                        → {m.cheaper_alternative || m.generic_equivalent}
+                      </span>
+                      {m.alternative_cost != null && (
+                        <Badge className="bg-success text-success-foreground">
+                          ${m.alternative_cost.toFixed(0)}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                  <div className="mt-2 flex items-center gap-2">
+                    <Badge variant="secondary" className="bg-success/15 text-success text-[10px]">
+                      <Sparkles className="mr-1 h-3 w-3" /> Savings opportunity
+                    </Badge>
+                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      via {m.source === "database" ? "MediCura DB" : "AI lookup"}
+                    </span>
                   </div>
+                  {m.savings_note && (
+                    <p className="mt-2 text-xs text-muted-foreground">{m.savings_note}</p>
+                  )}
                 </div>
               ))}
-              {findMedicationMatches(items, meds.data || []).length === 0 && (
-                <p className="text-sm text-muted-foreground">No medication matches on this bill.</p>
+              {alternatives.data?.length === 0 && medNames.length > 0 && !alternatives.isLoading && (
+                <p className="text-sm text-muted-foreground">
+                  No cheaper alternatives found for the medications on this bill.
+                </p>
               )}
             </CardContent>
           </Card>
@@ -188,25 +252,28 @@ function BillDetail() {
   );
 }
 
-function findMedicationMatches(items: BillingItem[], meds: Array<{ name: string; average_cost: number | null; cheaper_alternative: string | null; alternative_cost: number | null }>) {
-  const lower = items.map((i) => i.description.toLowerCase());
-  return meds.filter((m) => lower.some((d) => d.includes(m.name.toLowerCase())));
-}
-
 function ReviewDialog({ billId, hospitalName }: { billId: string; hospitalName: string }) {
   const send = useServerFn(sendBillingReviewEmail);
   const [open, setOpen] = useState(false);
   const [hospitalEmail, setHospitalEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fallback, setFallback] = useState<{ draft: EmailDraft; reason: string } | null>(null);
 
   async function onSend() {
     setLoading(true);
+    setFallback(null);
     try {
-      await send({ data: { billId, hospitalEmail, hospitalName, userQuestions: notes } });
-      toast.success("Review request sent");
-      setOpen(false);
-      setNotes("");
+      const result = await send({ data: { billId, hospitalEmail, hospitalName, userQuestions: notes } });
+      if (result.ok) {
+        toast.success("Review request sent");
+        setOpen(false);
+        setNotes("");
+      } else {
+        console.warn("Email send fell back:", result.reason);
+        setFallback({ draft: result.draft, reason: result.reason });
+        toast.warning("Email service unavailable — use the fallback below.");
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not send email");
     } finally {
@@ -214,8 +281,25 @@ function ReviewDialog({ billId, hospitalName }: { billId: string; hospitalName: 
     }
   }
 
+  async function copyDraft() {
+    if (!fallback) return;
+    const text = `To: ${fallback.draft.to}\nSubject: ${fallback.draft.subject}\n\n${fallback.draft.body}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Draft copied to clipboard");
+    } catch {
+      toast.error("Couldn't access clipboard");
+    }
+  }
+
+  function mailtoHref() {
+    if (!fallback) return "#";
+    const { to, subject, body } = fallback.draft;
+    return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setFallback(null); }}>
       <DialogTrigger asChild>
         <Button className="w-full" variant="outline">
           <Mail className="mr-2 h-4 w-4" /> Request line-item review
@@ -235,6 +319,24 @@ function ReviewDialog({ billId, hospitalName }: { billId: string; hospitalName: 
             <Label htmlFor="notes">Anything specific to mention?</Label>
             <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="E.g. I was charged twice for the same lab." rows={4} />
           </div>
+
+          {fallback && (
+            <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
+              <p className="font-medium">Couldn't send automatically</p>
+              <p className="mt-1 text-xs text-muted-foreground">{fallback.reason}</p>
+              <div className="mt-3 flex gap-2">
+                <Button size="sm" variant="outline" onClick={copyDraft}>
+                  <Copy className="mr-1.5 h-3.5 w-3.5" /> Copy draft
+                </Button>
+                <a
+                  href={mailtoHref()}
+                  className="inline-flex items-center rounded-md border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent"
+                >
+                  <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> Open in mail app
+                </a>
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
