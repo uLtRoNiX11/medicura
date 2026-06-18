@@ -47,8 +47,13 @@ function UploadPage() {
       return result;
     },
     onSuccess: (result) => {
-      toast.success("Bill decoded");
+      toast.success(
+        result.remindersCreated > 0
+          ? `Bill decoded · ${result.remindersCreated} reminder${result.remindersCreated === 1 ? "" : "s"} added`
+          : "Bill decoded",
+      );
       queryClient.invalidateQueries({ queryKey: ["bills"] });
+      queryClient.invalidateQueries({ queryKey: ["reminders"] });
       navigate({ to: "/bills/$billId", params: { billId: result.billId } });
     },
     onError: (err) => {
