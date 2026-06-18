@@ -53,20 +53,46 @@ Read the attached bill (image or PDF) and respond with ONLY valid JSON matching 
 }
 Flag duplicate, vague, or unusually expensive line items. Do not invent codes you cannot read.`;
 
+    // The chat-completions image_url block only accepts PNG/JPEG/WebP/GIF.
+    // For PDFs we fetch the file server-side, base64-encode it, and pass it as
+    // a `file` content block which Gemini natively understands.
+    const isPdf =
+      data.mimeType === "application/pdf" || /\.pdf($|\?)/i.test(data.fileUrl);
+
+    let userContent: Array<Record<string, unknown>>;
+    if (isPdf) {
+      const fileRes = await fetch(data.fileUrl);
+      if (!fileRes.ok) throw new Error(`Could not download bill (${fileRes.status})`);
+      const buf = new Uint8Array(await fileRes.arrayBuffer());
+      // chunked base64 to avoid call-stack overflow on large files
+      let binary = "";
+      const chunk = 0x8000;
+      for (let i = 0; i < buf.length; i += chunk) {
+        binary += String.fromCharCode(...buf.subarray(i, i + chunk));
+      }
+      const base64 = btoa(binary);
+      userContent = [
+        { type: "text", text: "Decode this PDF bill and return the structured JSON only." },
+        {
+          type: "file",
+          file: {
+            filename: "bill.pdf",
+            file_data: `data:application/pdf;base64,${base64}`,
+          },
+        },
+      ];
+    } else {
+      userContent = [
+        { type: "text", text: "Decode this bill and return the structured JSON only." },
+        { type: "image_url", image_url: { url: data.fileUrl } },
+      ];
+    }
+
     const body = {
       model: "google/gemini-2.5-flash",
       messages: [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Decode this bill and return the structured JSON only." },
-            { type: "image_url", image_url: { url: data.fileUrl } },
-          ],
-        },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent },
       ],
       response_format: { type: "json_object" },
     };
