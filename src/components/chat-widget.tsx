@@ -71,7 +71,8 @@ export function ChatWidget() {
           .single();
         if (error) throw error;
         tid = t.id;
-        setThreadId(tid);
+        setActiveThreadId(tid);
+        queryClient.invalidateQueries({ queryKey: ["chat-threads"] });
       }
 
       await supabase.from("chat_messages").insert({
