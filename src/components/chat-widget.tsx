@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircleHeart, Send, X, Sparkles, Loader2 } from "lucide-react";
+import { MessageCircleHeart, Send, X, Sparkles, Loader2, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { useActiveThreadId, setActiveThreadId } from "@/hooks/use-active-thread";
 
 const SUGGESTIONS = [
   "Explain my latest bill items",
@@ -17,13 +18,21 @@ const SUGGESTIONS = [
 
 type Msg = { id: string; role: "user" | "assistant"; content: string };
 
+export const CHAT_OPEN_EVENT = "medicura:chat-open";
+
 export function ChatWidget() {
   const { data: user } = useCurrentUser();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [threadId, setThreadId] = useState<string | null>(null);
+  const threadId = useActiveThreadId();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener(CHAT_OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(CHAT_OPEN_EVENT, onOpen);
+  }, []);
 
   const messages = useQuery({
     queryKey: ["chat-messages", threadId],
@@ -62,7 +71,8 @@ export function ChatWidget() {
           .single();
         if (error) throw error;
         tid = t.id;
-        setThreadId(tid);
+        setActiveThreadId(tid);
+        queryClient.invalidateQueries({ queryKey: ["chat-threads"] });
       }
 
       await supabase.from("chat_messages").insert({
@@ -171,6 +181,15 @@ The user's recent bills (JSON): ${JSON.stringify(bills ?? []).slice(0, 6000)}`;
                 <p className="font-display text-sm font-semibold leading-tight">MediCura Assistant</p>
                 <p className="text-[10px] text-muted-foreground">Grounded in your private bills</p>
               </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                title="New chat"
+                onClick={() => setActiveThreadId(null)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
 
             <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
