@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircleHeart, Send, X, Sparkles, Loader2 } from "lucide-react";
+import { MessageCircleHeart, Send, X, Sparkles, Loader2, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { useActiveThreadId, setActiveThreadId } from "@/hooks/use-active-thread";
 
 const SUGGESTIONS = [
   "Explain my latest bill items",
@@ -17,13 +18,21 @@ const SUGGESTIONS = [
 
 type Msg = { id: string; role: "user" | "assistant"; content: string };
 
+export const CHAT_OPEN_EVENT = "medicura:chat-open";
+
 export function ChatWidget() {
   const { data: user } = useCurrentUser();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [threadId, setThreadId] = useState<string | null>(null);
+  const threadId = useActiveThreadId();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener(CHAT_OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(CHAT_OPEN_EVENT, onOpen);
+  }, []);
 
   const messages = useQuery({
     queryKey: ["chat-messages", threadId],
