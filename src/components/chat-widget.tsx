@@ -181,6 +181,15 @@ The user's recent bills (JSON): ${JSON.stringify(bills ?? []).slice(0, 6000)}`;
                 <p className="font-display text-sm font-semibold leading-tight">MediCura Assistant</p>
                 <p className="text-[10px] text-muted-foreground">Grounded in your private bills</p>
               </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                title="New chat"
+                onClick={() => setActiveThreadId(null)}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
 
             <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
