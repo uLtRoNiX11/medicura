@@ -157,7 +157,7 @@ function Dashboard() {
                       </CardTitle>
                       {Number(b.potential_savings) > 0 && (
                         <Badge variant="secondary" className="bg-success/15 text-success-foreground">
-                          Save ${Number(b.potential_savings).toFixed(0)}
+                          Save {formatCurrency(b.potential_savings, b.currency, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                         </Badge>
                       )}
                     </div>
@@ -167,7 +167,7 @@ function Dashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="font-display text-2xl font-semibold">
-                      ${Number(b.total_amount ?? 0).toFixed(2)}
+                      {formatCurrency(b.total_amount ?? 0, b.currency)}
                     </div>
                     <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
                       {b.plain_summary || "Tap to view itemized breakdown."}
