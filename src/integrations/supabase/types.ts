@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           billing_items: Json
           created_at: string
+          currency: string
           hospital_name: string | null
           id: string
           original_file_url: string | null
@@ -30,6 +31,7 @@ export type Database = {
         Insert: {
           billing_items?: Json
           created_at?: string
+          currency?: string
           hospital_name?: string | null
           id?: string
           original_file_url?: string | null
@@ -42,6 +44,7 @@ export type Database = {
         Update: {
           billing_items?: Json
           created_at?: string
+          currency?: string
           hospital_name?: string | null
           id?: string
           original_file_url?: string | null
