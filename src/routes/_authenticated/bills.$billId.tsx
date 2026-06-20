@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { sendBillingReviewEmail, type EmailDraft } from "@/lib/email.functions";
 import { findAlternatives, type AlternativeMatch } from "@/lib/medications.functions";
+import { formatCurrency } from "@/lib/currency";
 
 type BillingItem = {
   description: string;
