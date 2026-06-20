@@ -132,8 +132,10 @@ SUPABASE_URL=your-supabase-project-url
 SUPABASE_PUBLISHABLE_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
-# AI Gateway Integration (Required for Bill Decoding and Chatbot Assistant)
-LOVABLE_API_KEY=your-lovable-api-key
+# Vite x Supabase Integration
+VITE_SUPABASE_PROJECT_ID="crwynbqevbfoarhofgqm"
+VITE_SUPABASE_PUBLISHABLE_KEY="sb_publishable__FmpU1_9a3P_qXES0vgymg_mKE51Mkd"
+VITE_SUPABASE_URL="https://crwynbqevbfoarhofgqm.supabase.co"
 
 # Transactional Mail (Optional; for sending dispute review emails)
 RESEND_API_KEY=your-resend-api-key
