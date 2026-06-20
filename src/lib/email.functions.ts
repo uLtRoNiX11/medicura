@@ -103,20 +103,22 @@ ${flagged.length ? `Items I'd especially appreciate clarification on:\n${flagged
 Thank you for your help.`;
 
     const draft: EmailDraft = { to: data.hospitalEmail, subject, body };
-    const apiKey = process.env.RESEND_API_KEY;
+    const connectionKey = process.env.RESEND_API_KEY;
+    const lovableKey = process.env.LOVABLE_API_KEY;
 
-    if (!apiKey) {
-      console.warn("[MediCura] RESEND_API_KEY missing — returning draft for client-side fallback.");
-      return { ok: false, reason: "RESEND_API_KEY is not configured.", draft };
+    if (!connectionKey || !lovableKey) {
+      console.warn("[MediCura] Resend connector keys missing — returning draft for client-side fallback.");
+      return { ok: false, reason: "Email service is not configured.", draft };
     }
 
     const fromAddr = process.env.RESEND_FROM_EMAIL || "MediCura <onboarding@resend.dev>";
 
     try {
-      const res = await fetch("https://api.resend.com/emails", {
+      const res = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${lovableKey}`,
+          "X-Connection-Api-Key": connectionKey,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
