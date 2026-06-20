@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentProfile, useCurrentUser } from "@/hooks/use-current-user";
 import { ChatWidget } from "@/components/chat-widget";
+import { formatCurrency } from "@/lib/currency";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({ meta: [{ title: "Dashboard — MediCura" }] }),
