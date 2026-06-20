@@ -115,8 +115,12 @@ function Dashboard() {
         <MetricCard
           icon={PiggyBank}
           label="Estimated savings"
-          value={`$${totalSavings.toFixed(2)}`}
-          subtitle={`Across $${totalSpent.toFixed(2)} in billed care`}
+          value={formatCurrency(headline.savings, dominantCurrency)}
+          subtitle={
+            otherCurrencies.length > 0
+              ? `Across ${formatCurrency(headline.spent, dominantCurrency)} in billed care (+ ${otherCurrencies.join(", ")})`
+              : `Across ${formatCurrency(headline.spent, dominantCurrency)} in billed care`
+          }
           loading={bills.isLoading}
           tone="success"
         />
