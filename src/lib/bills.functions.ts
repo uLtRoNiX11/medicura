@@ -30,11 +30,13 @@ const ExtractedMedicationSchema = z.object({
 const BillSchema = z.object({
   hospital_name: z.string().nullable(),
   total_amount: z.number().nullable(),
+  currency: z.string().default("USD"),
   plain_summary: z.string(),
   billing_items: z.array(BillingItemSchema),
   potential_savings: z.number().default(0),
   extractedMedications: z.array(ExtractedMedicationSchema).default([]),
 });
+
 
 const ALL_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
@@ -58,22 +60,23 @@ export const parseBill = createServerFn({ method: "POST" })
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
 
-    const systemPrompt = `You are MediCura, an expert at decoding U.S. medical bills.
+    const systemPrompt = `You are MediCura, an expert at decoding medical bills from any country.
 Read the attached bill (image or PDF) and respond with ONLY valid JSON matching this schema:
 {
   "hospital_name": string | null,
   "total_amount": number | null,
+  "currency": string (ISO 4217 code of the currency actually shown on the bill — e.g. "USD", "INR", "EUR", "GBP", "JPY", "AED". Infer from currency symbols (₹, $, €, £, ¥), words ("Rs.", "Rupees", "INR"), the country/hospital, or address. Default to "USD" only if truly unknown.),
   "plain_summary": string (2-3 sentences in friendly plain English),
   "billing_items": [
     {
-      "description": string,
-      "code": string | null (CPT / HCPCS code if present),
-      "amount": number,
+      "description": string (preserve the wording from the bill),
+      "code": string | null (CPT / HCPCS / local billing code if present),
+      "amount": number (numeric value in the SAME currency as the bill — do NOT convert to USD),
       "flag": null | { "reason": string, "severity": "info" | "warning" | "high" },
-      "cheaper_alternative": null | { "name": string, "estimated_cost": number }
+      "cheaper_alternative": null | { "name": string, "estimated_cost": number (same currency as the bill) }
     }
   ],
-  "potential_savings": number,
+  "potential_savings": number (same currency as the bill),
   "extractedMedications": [
     {
       "medicationName": string,
@@ -84,7 +87,8 @@ Read the attached bill (image or PDF) and respond with ONLY valid JSON matching 
     }
   ]
 }
-Flag duplicate, vague, or unusually expensive items. For every prescription medication on the bill, add it to extractedMedications with a reasonable dosing schedule. If no medications are present, return an empty array.`;
+IMPORTANT: Keep all monetary amounts in the bill's original currency — never convert. Include every line item exactly as it appears on the bill (don't omit, merge, or reorder). Flag duplicate, vague, or unusually expensive items. For every prescription medication on the bill, add it to extractedMedications with a reasonable dosing schedule. If no medications are present, return an empty array.`;
+
 
     const isPdf =
       data.mimeType === "application/pdf" || /\.pdf($|\?)/i.test(data.fileUrl);
@@ -151,6 +155,7 @@ Flag duplicate, vague, or unusually expensive items. For every prescription medi
       parsed = {
         hospital_name: null,
         total_amount: null,
+        currency: "USD",
         plain_summary: "We couldn't fully parse this bill. Please review manually.",
         billing_items: [],
         potential_savings: 0,
@@ -166,10 +171,12 @@ Flag duplicate, vague, or unusually expensive items. For every prescription medi
         original_file_url: data.fileUrl,
         hospital_name: parsed.hospital_name,
         total_amount: parsed.total_amount,
+        currency: (parsed.currency || "USD").toUpperCase(),
         plain_summary: parsed.plain_summary,
         billing_items: parsed.billing_items as unknown as never,
         potential_savings: parsed.potential_savings,
       })
+
       .select("id")
       .single();
     if (error) throw error;

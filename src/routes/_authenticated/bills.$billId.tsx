@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { sendBillingReviewEmail, type EmailDraft } from "@/lib/email.functions";
 import { findAlternatives, type AlternativeMatch } from "@/lib/medications.functions";
+import { formatCurrency } from "@/lib/currency";
 
 type BillingItem = {
   description: string;
@@ -133,11 +134,12 @@ function BillDetail() {
           <CardHeader>
             <CardTitle className="font-display">Itemized charges</CardTitle>
             <CardDescription>
-              Total ${Number(bill.data?.total_amount ?? 0).toFixed(2)}
+              Total {formatCurrency(bill.data?.total_amount, bill.data?.currency)}
               {Number(bill.data?.potential_savings ?? 0) > 0 && (
-                <> · Estimated savings ${Number(bill.data!.potential_savings).toFixed(2)}</>
+                <> · Estimated savings {formatCurrency(bill.data!.potential_savings, bill.data?.currency)}</>
               )}
             </CardDescription>
+
           </CardHeader>
           <CardContent>
             {items.length === 0 ? (
@@ -177,8 +179,9 @@ function BillDetail() {
                         )}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm">
-                        ${Number(item.amount).toFixed(2)}
+                        {formatCurrency(item.amount, bill.data?.currency)}
                       </TableCell>
+
                     </TableRow>
                   ))}
                 </TableBody>
