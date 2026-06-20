@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { formatCurrency } from "@/lib/currency";
+
 
 export const Route = createFileRoute("/_authenticated/bills")({
   head: () => ({ meta: [{ title: "Bills — MediCura" }] }),
@@ -63,14 +65,15 @@ function BillsList() {
                     <CardTitle className="text-base">{b.hospital_name || "Untitled bill"}</CardTitle>
                     {Number(b.potential_savings) > 0 && (
                       <Badge variant="secondary" className="bg-success/15 text-success-foreground">
-                        Save ${Number(b.potential_savings).toFixed(0)}
+                        Save {formatCurrency(b.potential_savings, b.currency, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                       </Badge>
                     )}
                   </div>
                   <CardDescription>{new Date(b.created_at).toLocaleDateString()}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="font-display text-2xl font-semibold">${Number(b.total_amount ?? 0).toFixed(2)}</div>
+                  <div className="font-display text-2xl font-semibold">{formatCurrency(b.total_amount, b.currency)}</div>
+
                   <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{b.plain_summary || "Tap to view itemized breakdown."}</p>
                 </CardContent>
               </Card>
