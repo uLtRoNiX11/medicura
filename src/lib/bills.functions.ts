@@ -155,6 +155,7 @@ IMPORTANT: Keep all monetary amounts in the bill's original currency — never c
       parsed = {
         hospital_name: null,
         total_amount: null,
+        currency: "USD",
         plain_summary: "We couldn't fully parse this bill. Please review manually.",
         billing_items: [],
         potential_savings: 0,
@@ -170,10 +171,12 @@ IMPORTANT: Keep all monetary amounts in the bill's original currency — never c
         original_file_url: data.fileUrl,
         hospital_name: parsed.hospital_name,
         total_amount: parsed.total_amount,
+        currency: (parsed.currency || "USD").toUpperCase(),
         plain_summary: parsed.plain_summary,
         billing_items: parsed.billing_items as unknown as never,
         potential_savings: parsed.potential_savings,
       })
+
       .select("id")
       .single();
     if (error) throw error;
