@@ -51,10 +51,24 @@ function Dashboard() {
     },
   });
 
-  const totalSpent =
-    bills.data?.reduce((sum, b) => sum + Number(b.total_amount ?? 0), 0) ?? 0;
-  const totalSavings =
-    bills.data?.reduce((sum, b) => sum + Number(b.potential_savings ?? 0), 0) ?? 0;
+  // Aggregate totals per-currency (bills can be in different currencies)
+  const totalsByCurrency = (bills.data ?? []).reduce<Record<string, { spent: number; savings: number }>>((acc, b) => {
+    const code = (b.currency || "USD").toUpperCase();
+    if (!acc[code]) acc[code] = { spent: 0, savings: 0 };
+    acc[code].spent += Number(b.total_amount ?? 0);
+    acc[code].savings += Number(b.potential_savings ?? 0);
+    return acc;
+  }, {});
+  const currencyCodes = Object.keys(totalsByCurrency);
+  // Pick the dominant currency (most bills) for the headline number
+  const dominantCurrency =
+    currencyCodes.sort(
+      (a, b) =>
+        (bills.data?.filter((x) => (x.currency || "USD").toUpperCase() === b).length ?? 0) -
+        (bills.data?.filter((x) => (x.currency || "USD").toUpperCase() === a).length ?? 0),
+    )[0] ?? "USD";
+  const headline = totalsByCurrency[dominantCurrency] ?? { spent: 0, savings: 0 };
+  const otherCurrencies = currencyCodes.filter((c) => c !== dominantCurrency);
 
   const firstName = profile?.full_name?.split(" ")[0] || "there";
 
