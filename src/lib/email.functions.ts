@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { formatCurrency } from "@/lib/currency";
 
 export type EmailDraft = {
   to: string;
