@@ -25,8 +25,11 @@ function ResetPassword() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast.success("Password updated");
-      navigate({ to: "/", replace: true });
+      // Sign out the recovery session so the user must log in fresh with
+      // their new password — prevents auto-login on the reset device.
+      await supabase.auth.signOut();
+      toast.success("Password updated — please sign in with your new password");
+      navigate({ to: "/auth", replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not update password");
     } finally {
