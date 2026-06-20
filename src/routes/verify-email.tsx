@@ -11,8 +11,21 @@ export const Route = createFileRoute("/verify-email")({
   head: () => ({
     meta: [
       { title: "Verify your email — MediCura" },
-      { name: "description", content: "Confirm your email to activate your MediCura account." },
+      {
+        name: "description",
+        content:
+          "Confirm your email address to activate your MediCura account and start decoding medical bills.",
+      },
+      { property: "og:title", content: "Verify your email — MediCura" },
+      {
+        property: "og:description",
+        content: "Confirm your email to activate your MediCura account.",
+      },
+      { property: "og:url", content: "https://medicura.lovable.app/verify-email" },
+      { property: "og:type", content: "website" },
+      { name: "robots", content: "noindex" },
     ],
+    links: [{ rel: "canonical", href: "https://medicura.lovable.app/verify-email" }],
   }),
   validateSearch: (s: Record<string, unknown>) => ({
     email: typeof s.email === "string" ? s.email : undefined,
@@ -71,6 +84,7 @@ function VerifyEmailPage() {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full max-w-md"
       >
+        <h1 className="sr-only">Verify your email</h1>
         <div className="mb-8 flex items-center justify-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <HeartPulse className="h-5 w-5" />

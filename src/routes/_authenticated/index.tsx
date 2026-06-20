@@ -14,7 +14,17 @@ import { ChatWidget } from "@/components/chat-widget";
 import { formatCurrency } from "@/lib/currency";
 
 export const Route = createFileRoute("/_authenticated/")({
-  head: () => ({ meta: [{ title: "Dashboard — MediCura" }] }),
+  head: () => ({
+    meta: [
+      { title: "Medical Care Dashboard — MediCura" },
+      {
+        name: "description",
+        content:
+          "Your MediCura dashboard: track decoded medical bills, estimated savings, and active medication reminders in one place.",
+      },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: Dashboard,
 });
 
@@ -74,7 +84,7 @@ function Dashboard() {
 
   return (
     <AppShell
-      title="Dashboard"
+      title="Medical Care Dashboard"
       description="Your health spending and reminders at a glance."
       actions={
         <Button asChild size="sm">

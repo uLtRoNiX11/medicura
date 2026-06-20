@@ -10,7 +10,24 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Reset password — MediCura" }] }),
+  head: () => ({
+    meta: [
+      { title: "Reset password — MediCura" },
+      {
+        name: "description",
+        content: "Set a new password for your MediCura account to keep your medical data secure.",
+      },
+      { property: "og:title", content: "Reset password — MediCura" },
+      {
+        property: "og:description",
+        content: "Choose a new password for your MediCura account.",
+      },
+      { property: "og:url", content: "https://medicura.lovable.app/reset-password" },
+      { property: "og:type", content: "website" },
+      { name: "robots", content: "noindex" },
+    ],
+    links: [{ rel: "canonical", href: "https://medicura.lovable.app/reset-password" }],
+  }),
   component: ResetPassword,
 });
 

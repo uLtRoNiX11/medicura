@@ -1,0 +1,9 @@
+# MediCura
+
+> AI-powered healthcare assistant that decodes medical bills, surfaces cheaper medication alternatives, and manages medication reminders — with strict per-user privacy.
+
+MediCura analyzes uploaded medical bills (PDF, JPG, PNG) in any currency, flags duplicate or unusually high charges, suggests FDA-approved generic equivalents, builds dosing schedules from prescribed medications, and offers a grounded conversational assistant for billing questions.
+
+## Pages
+
+- [Home](/): Product overview and entry point to sign in or create an account.
