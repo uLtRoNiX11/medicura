@@ -35,9 +35,10 @@ export const buildBillingReviewDraft = createServerFn({ method: "POST" })
 
     const items =
       (bill.billing_items as Array<{ description: string; amount: number; code?: string | null; flag?: unknown }>) || [];
+    const currency = (bill.currency || "USD").toUpperCase();
     const flagged = items.filter((i) => i && i.flag);
     const itemList = items
-      .map((i) => `- ${i.description}${i.code ? ` (code ${i.code})` : ""}: $${Number(i.amount).toFixed(2)}`)
+      .map((i) => `- ${i.description}${i.code ? ` (code ${i.code})` : ""}: ${formatCurrency(i.amount, currency)}`)
       .join("\n");
 
     const subject = `Line-item review request — bill from ${data.hospitalName || "your facility"}`;
@@ -45,7 +46,7 @@ export const buildBillingReviewDraft = createServerFn({ method: "POST" })
 
 I'm reaching out to request a line-item review of a recent bill on my account, with the help of MediCura.
 
-Total charged: $${Number(bill.total_amount ?? 0).toFixed(2)}
+Total charged: ${formatCurrency(bill.total_amount ?? 0, currency)}
 
 Charges I'd like to verify:
 ${itemList || "(no parsed line items)"}
