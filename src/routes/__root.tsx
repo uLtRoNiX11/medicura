@@ -86,6 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "MediCura is an AI healthcare assistant that itemizes medical bills, surfaces cheaper medication alternatives, and helps you stay on top of pill reminders.",
       },
+      { property: "og:site_name", content: "MediCura" },
       { property: "og:title", content: "MediCura — Decode bills. Save on care." },
       {
         property: "og:description",
@@ -93,9 +94,43 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "AI-powered medical bill itemizer and cost optimizer. Understand every charge, find cheaper alternatives, never miss a dose.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://medicura.lovable.app/" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "MediCura — Decode bills. Save on care." },
+      {
+        name: "twitter:description",
+        content:
+          "AI-powered medical bill itemizer and cost optimizer. Understand every charge, find cheaper alternatives, never miss a dose.",
+      },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": "https://medicura.lovable.app/#organization",
+              name: "MediCura",
+              url: "https://medicura.lovable.app/",
+              description:
+                "AI-powered healthcare assistant that decodes medical bills, surfaces cheaper medication alternatives, and manages medication reminders.",
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://medicura.lovable.app/#website",
+              url: "https://medicura.lovable.app/",
+              name: "MediCura",
+              description:
+                "Decode medical bills, find cheaper prescription alternatives, and never miss a dose — powered by AI.",
+              publisher: { "@id": "https://medicura.lovable.app/#organization" },
+            },
+          ],
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,

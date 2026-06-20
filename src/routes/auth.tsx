@@ -13,9 +13,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — MediCura" },
-      { name: "description", content: "Sign in or create your MediCura account to decode bills and manage medications securely." },
+      { title: "Sign in to MediCura" },
+      {
+        name: "description",
+        content:
+          "Sign in or create your MediCura account to decode medical bills, find cheaper medication alternatives, and manage dosing reminders securely.",
+      },
+      { property: "og:title", content: "Sign in to MediCura" },
+      {
+        property: "og:description",
+        content:
+          "Access your MediCura account to itemize medical bills and optimize medication costs with AI.",
+      },
+      { property: "og:url", content: "https://medicura.lovable.app/auth" },
+      { property: "og:type", content: "website" },
     ],
+    links: [{ rel: "canonical", href: "https://medicura.lovable.app/auth" }],
   }),
   component: AuthPage,
 });
@@ -88,6 +101,13 @@ function AuthPage() {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full max-w-md"
       >
+        <h1 className="sr-only">
+          {mode === "signin"
+            ? "Sign in to MediCura"
+            : mode === "signup"
+              ? "Create your MediCura account"
+              : "Reset your MediCura password"}
+        </h1>
         <div className="mb-8 flex items-center justify-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <HeartPulse className="h-5 w-5" />

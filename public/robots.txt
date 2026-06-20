@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /auth/callback
+Disallow: /verify-email
+Disallow: /reset-password
+Disallow: /api/
+
+Sitemap: https://medicura.lovable.app/sitemap.xml
