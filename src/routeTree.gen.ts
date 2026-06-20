@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as TrustRouteImport } from './routes/trust'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -27,6 +28,11 @@ import { Route as AuthenticatedBillsBillIdRouteImport } from './routes/_authenti
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrustRoute = TrustRouteImport.update({
+  id: '/trust',
+  path: '/trust',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/trust': typeof TrustRoute
   '/verify-email': typeof VerifyEmailRoute
   '/bills': typeof AuthenticatedBillsRouteWithChildren
   '/chat': typeof AuthenticatedChatRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/trust': typeof TrustRoute
   '/verify-email': typeof VerifyEmailRoute
   '/bills': typeof AuthenticatedBillsRouteWithChildren
   '/chat': typeof AuthenticatedChatRoute
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/trust': typeof TrustRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/bills': typeof AuthenticatedBillsRouteWithChildren
   '/_authenticated/chat': typeof AuthenticatedChatRoute
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/trust'
     | '/verify-email'
     | '/bills'
     | '/chat'
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/trust'
     | '/verify-email'
     | '/bills'
     | '/chat'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/sitemap.xml'
+    | '/trust'
     | '/verify-email'
     | '/_authenticated/bills'
     | '/_authenticated/chat'
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TrustRoute: typeof TrustRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   ApiChatRoute: typeof ApiChatRoute
 }
@@ -208,6 +221,13 @@ declare module '@tanstack/react-router' {
       path: '/verify-email'
       fullPath: '/verify-email'
       preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trust': {
+      id: '/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof TrustRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -351,6 +371,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TrustRoute: TrustRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   ApiChatRoute: ApiChatRoute,
 }
