@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentProfile, useCurrentUser } from "@/hooks/use-current-user";
 import { ChatWidget } from "@/components/chat-widget";
+import { formatCurrency } from "@/lib/currency";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({ meta: [{ title: "Dashboard — MediCura" }] }),
@@ -50,10 +51,24 @@ function Dashboard() {
     },
   });
 
-  const totalSpent =
-    bills.data?.reduce((sum, b) => sum + Number(b.total_amount ?? 0), 0) ?? 0;
-  const totalSavings =
-    bills.data?.reduce((sum, b) => sum + Number(b.potential_savings ?? 0), 0) ?? 0;
+  // Aggregate totals per-currency (bills can be in different currencies)
+  const totalsByCurrency = (bills.data ?? []).reduce<Record<string, { spent: number; savings: number }>>((acc, b) => {
+    const code = (b.currency || "USD").toUpperCase();
+    if (!acc[code]) acc[code] = { spent: 0, savings: 0 };
+    acc[code].spent += Number(b.total_amount ?? 0);
+    acc[code].savings += Number(b.potential_savings ?? 0);
+    return acc;
+  }, {});
+  const currencyCodes = Object.keys(totalsByCurrency);
+  // Pick the dominant currency (most bills) for the headline number
+  const dominantCurrency =
+    currencyCodes.sort(
+      (a, b) =>
+        (bills.data?.filter((x) => (x.currency || "USD").toUpperCase() === b).length ?? 0) -
+        (bills.data?.filter((x) => (x.currency || "USD").toUpperCase() === a).length ?? 0),
+    )[0] ?? "USD";
+  const headline = totalsByCurrency[dominantCurrency] ?? { spent: 0, savings: 0 };
+  const otherCurrencies = currencyCodes.filter((c) => c !== dominantCurrency);
 
   const firstName = profile?.full_name?.split(" ")[0] || "there";
 
@@ -100,8 +115,12 @@ function Dashboard() {
         <MetricCard
           icon={PiggyBank}
           label="Estimated savings"
-          value={`$${totalSavings.toFixed(2)}`}
-          subtitle={`Across $${totalSpent.toFixed(2)} in billed care`}
+          value={formatCurrency(headline.savings, dominantCurrency)}
+          subtitle={
+            otherCurrencies.length > 0
+              ? `Across ${formatCurrency(headline.spent, dominantCurrency)} in billed care (+ ${otherCurrencies.join(", ")})`
+              : `Across ${formatCurrency(headline.spent, dominantCurrency)} in billed care`
+          }
           loading={bills.isLoading}
           tone="success"
         />
@@ -138,7 +157,7 @@ function Dashboard() {
                       </CardTitle>
                       {Number(b.potential_savings) > 0 && (
                         <Badge variant="secondary" className="bg-success/15 text-success-foreground">
-                          Save ${Number(b.potential_savings).toFixed(0)}
+                          Save {formatCurrency(b.potential_savings, b.currency, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                         </Badge>
                       )}
                     </div>
@@ -148,7 +167,7 @@ function Dashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="font-display text-2xl font-semibold">
-                      ${Number(b.total_amount ?? 0).toFixed(2)}
+                      {formatCurrency(b.total_amount ?? 0, b.currency)}
                     </div>
                     <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
                       {b.plain_summary || "Tap to view itemized breakdown."}

@@ -212,7 +212,7 @@ function BillDetail() {
                   <div className="flex items-center justify-between gap-2">
                     <div className="font-medium">{m.name}</div>
                     {m.average_cost != null && (
-                      <Badge variant="outline">${m.average_cost.toFixed(0)}</Badge>
+                      <Badge variant="outline">{formatCurrency(m.average_cost, bill.data?.currency, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}</Badge>
                     )}
                   </div>
                   {(m.cheaper_alternative || m.generic_equivalent) && (
@@ -222,7 +222,7 @@ function BillDetail() {
                       </span>
                       {m.alternative_cost != null && (
                         <Badge className="bg-success text-success-foreground">
-                          ${m.alternative_cost.toFixed(0)}
+                          {formatCurrency(m.alternative_cost, bill.data?.currency, { maximumFractionDigits: 0, minimumFractionDigits: 0 })}
                         </Badge>
                       )}
                     </div>
