@@ -133,9 +133,9 @@ SUPABASE_PUBLISHABLE_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
 # Vite x Supabase Integration
-VITE_SUPABASE_PROJECT_ID="crwynbqevbfoarhofgqm"
-VITE_SUPABASE_PUBLISHABLE_KEY="sb_publishable__FmpU1_9a3P_qXES0vgymg_mKE51Mkd"
-VITE_SUPABASE_URL="https://crwynbqevbfoarhofgqm.supabase.co"
+VITE_SUPABASE_PROJECT_ID=your-vite-supabase-project-id
+VITE_SUPABASE_PUBLISHABLE_KEY=your-vite-supabase-anon-key
+VITE_SUPABASE_URL=your-vite-supabase-url
 
 # Transactional Mail (Optional; for sending dispute review emails)
 RESEND_API_KEY=your-resend-api-key
