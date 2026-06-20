@@ -17,6 +17,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         // and auth flow pages are intentionally excluded.
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
+          { path: "/trust", changefreq: "monthly", priority: "0.5" },
         ];
 
         const urls = entries.map((e) =>
